@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:chat_app/widgets/vg_image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 final _firebase = FirebaseAuth.instance;
@@ -14,14 +18,16 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final _form = GlobalKey<FormState>();
+
   bool _isLoginMode = true;
-  var _email = '';
-  var _password = '';
+  String _email = '';
+  String _password = '';
+  File? _pickedImg;
 
   void _submit() async {
     final isValid = _form.currentState!.validate();
 
-    if (!isValid) {
+    if (!isValid || !_isLoginMode && _pickedImg == null) {
       return;
     }
 
@@ -38,6 +44,16 @@ class _AuthScreenState extends State<AuthScreen> {
           email: _email,
           password: _password,
         );
+
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('profile_photos')
+            .child('${userCredential.user!.uid}.jpg');
+
+        await storageRef.putFile(_pickedImg!);
+        final imgUrl = await storageRef.getDownloadURL();
+
+        print(imgUrl);
       }
     } on FirebaseAuthException catch (error) {
       String errorMsg = error.message ?? 'Authentication failed';
@@ -79,6 +95,12 @@ class _AuthScreenState extends State<AuthScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (!_isLoginMode)
+                          VgImagePicker(
+                            onImagePick: (pickedImg) {
+                              _pickedImg = pickedImg;
+                            },
+                          ),
                         TextFormField(
                           decoration: const InputDecoration(
                             labelText: 'Email',
