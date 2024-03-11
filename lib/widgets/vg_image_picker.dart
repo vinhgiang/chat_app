@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class VgImagePicker extends StatefulWidget {
-  void Function(File) onImagePick;
+  final void Function(File) onImagePick;
 
-  VgImagePicker({
+  const VgImagePicker({
     super.key,
     required this.onImagePick,
   });
