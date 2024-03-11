@@ -23,6 +23,7 @@ class _AuthScreenState extends State<AuthScreen> {
   String _email = '';
   String _password = '';
   File? _pickedImg;
+  bool _isLoading = false;
 
   void _submit() async {
     final isValid = _form.currentState!.validate();
@@ -34,6 +35,9 @@ class _AuthScreenState extends State<AuthScreen> {
     _form.currentState!.save();
 
     try {
+      setState(() {
+        _isLoading = true;
+      });
       if (_isLoginMode) {
         final userCredential = await _firebase.signInWithEmailAndPassword(
           email: _email,
@@ -69,6 +73,10 @@ class _AuthScreenState extends State<AuthScreen> {
           content: Text(errorMsg),
         ),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -138,24 +146,28 @@ class _AuthScreenState extends State<AuthScreen> {
                         const SizedBox(
                           height: 12,
                         ),
-                        ElevatedButton(
-                          onPressed: _submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primaryContainer,
+                        if (_isLoading) const CircularProgressIndicator(),
+                        if (!_isLoading)
+                          ElevatedButton(
+                            onPressed: _submit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
+                            ),
+                            child: Text(_isLoginMode ? 'Login' : 'Sign up'),
                           ),
-                          child: Text(_isLoginMode ? 'Login' : 'Sign up'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _isLoginMode = !_isLoginMode;
-                            });
-                          },
-                          child: Text(_isLoginMode
-                              ? 'Create an account'
-                              : 'Already have an account?'),
-                        )
+                        if (!_isLoading)
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _isLoginMode = !_isLoginMode;
+                              });
+                            },
+                            child: Text(_isLoginMode
+                                ? 'Create an account'
+                                : 'Already have an account?'),
+                          )
                       ],
                     ),
                   ),
